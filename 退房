@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sun Inns Mini Check-In Kiosk</title>
     <style>
-        /* 外觀與排版設定 */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9; 
@@ -31,20 +30,9 @@
             position: relative;
         }
 
-        /* 切換畫面機制 */
-        .screen {
-            display: none;
-            width: 100%;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
+        .screen { display: none; width: 100%; flex-direction: column; align-items: center; gap: 15px; }
+        .screen.active { display: flex; }
 
-        .screen.active {
-            display: flex;
-        }
-
-        /* 頂部 Logo */
         .header-logo {
             width: 100%;
             display: flex;
@@ -54,151 +42,74 @@
             border-bottom: 1px solid #eee;
             padding-bottom: 10px;
         }
-        .header-logo img {
-            width: 120px;
-            height: auto;
-        }
+        .header-logo img { width: 120px; height: auto; }
 
         h2 { margin: 10px 0; color: #333; }
         p { color: #666; }
 
-        /* 按鈕設定 */
         button {
-            width: 100%;
-            padding: 15px;
-            min-height: 60px;
-            background-color: #0056b3;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 5px;
+            width: 100%; padding: 15px; min-height: 60px;
+            background-color: #0056b3; color: white;
+            border: none; border-radius: 12px; font-size: 16px;
+            cursor: pointer; transition: background-color 0.3s; margin-top: 5px;
         }
-
         button:hover { background-color: #004494; }
 
         .btn-danger { background-color: #dc3545; }
         .btn-danger:hover { background-color: #c82333; }
-
         .btn-success { background-color: #28a745; }
         .btn-success:hover { background-color: #218838; }
-
         .btn-secondary { background-color: #6c757d; }
         .btn-secondary:hover { background-color: #5a6268; }
 
-        /* 輸入框設定 */
-        input {
-            width: 90%;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 12px;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
+        input { width: 90%; padding: 15px; border: 1px solid #ccc; border-radius: 12px; font-size: 16px; margin-bottom: 10px; }
 
-        /* 表格設定：黃色表頭 + 灰白條紋 */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-
-        th {
-            background-color: #FFCC00; /* 黃色 */
-            color: #333;
-            font-weight: bold;
-        }
-
+        /* 表格：黃色表頭 + 灰白條紋 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #FFCC00; color: #333; font-weight: bold; }
         tr:nth-child(odd) { background-color: #ffffff; }
-        tr:nth-child(even) { background-color: #d3d3d3; } /* 灰色 */
+        tr:nth-child(even) { background-color: #d3d3d3; }
 
-        /* 語言切換 & Admin */
         #lang-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: auto;
-            min-height: auto;
-            padding: 8px 15px;
-            background-color: #6c757d;
-            font-size: 14px;
-            z-index: 10;
+            position: absolute; top: 20px; right: 20px;
+            width: auto; min-height: auto; padding: 8px 15px;
+            background-color: #6c757d; font-size: 14px; z-index: 10;
         }
         #lang-toggle:hover { background-color: #5a6268; }
 
         #admin-link {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 12px;
-            color: #999;
-            text-decoration: none;
-            cursor: pointer;
-            z-index: 10;
+            position: absolute; top: 20px; left: 20px;
+            font-size: 12px; color: #999; text-decoration: none; cursor: pointer; z-index: 10;
         }
         #admin-link:hover { color: #333; }
 
-        .error-msg {
-            color: red;
-            font-size: 14px;
-            display: none;
-        }
+        .error-msg { color: red; font-size: 14px; display: none; }
+        .price-breakdown { font-size: 14px; color: #555; margin-top: 5px; }
         
-        .price-breakdown {
-            font-size: 14px;
-            color: #555;
-            margin-top: 5px;
-        }
-
-        /* 延遲結帳勾選框 */
-        #late-option-area {
-            display: none; 
-            width: 100%; 
-            justify-content: center; 
-            gap: 10px; 
-            align-items: center; 
-            margin: 5px 0; 
-            font-size: 15px;
-        }
-        #late-check {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
+        #late-option-area { display: none; width: 100%; justify-content: center; gap: 10px; align-items: center; margin: 5px 0; font-size: 15px; }
+        #late-check { width: 18px; height: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <!-- 語言切換 & Admin -->
+    <!-- 固定按鈕 -->
     <button id="lang-toggle">BM / EN</button>
-    <a id="admin-link" onclick="showAdminCount()">Admin Panel</a>
+    <a id="admin-link" onclick="showAdminPanel()">Admin Panel</a>
 
     <div class="container" id="app-container">
-
-        <!-- 所有頁面頂部的 Logo -->
+        <!-- 每頁頂部 Logo -->
         <div class="header-logo">
             <img src="logo.png" alt="Sun Inns Logo" onclick="switchScreen('screen-welcome')">
         </div>
 
-        <!-- 頁面 1: 歡迎頁 -->
+        <!-- 畫面1: 歡迎頁 -->
         <div id="screen-welcome" class="screen active">
             <p id="welcome-text" style="font-size: 18px; margin-top: 10px;">Welcome to our mini check-in kiosk.</p>
-            
-            <!-- 【新功能】入住與退房按鈕 -->
             <button onclick="switchScreen('screen-booking')" id="welcome-btn" class="btn-success">Check-In (入住)</button>
             <button onclick="checkOutProcess()" id="checkout-btn" class="btn-danger">Check-Out (退房)</button>
         </div>
 
-        <!-- 頁面 2: 查詢頁 -->
+        <!-- 畫面2: 查詢頁 -->
         <div id="screen-booking" class="screen">
             <h2 id="booking-title">Find Your Booking</h2>
             <input type="text" id="booking-input" placeholder="Enter Room Number">
@@ -207,12 +118,13 @@
             <button onclick="switchScreen('screen-welcome')" class="btn-secondary">Back</button>
         </div>
 
-        <!-- 頁面 3: 房間詳情 -->
+        <!-- 畫面3: 房間詳情 -->
         <div id="screen-details" class="screen">
             <h2 id="details-title">Room Details</h2>
             <table>
                 <thead>
                     <tr>
+                        <th>Name</th>
                         <th id="th-guests">Guests</th>
                         <th id="th-room">Room No.</th>
                         <th id="th-type">Type</th>
@@ -220,21 +132,17 @@
                         <th id="th-rate">Rate</th>
                     </tr>
                 </thead>
-                <tbody id="details-body">
-                    <!-- 資料由 JavaScript 插入 -->
-                </tbody>
+                <tbody id="details-body"></tbody>
             </table>
-
             <div id="late-option-area">
                 <input type="checkbox" id="late-check"> 
                 <label for="late-check" id="late-label">Late Check-out (+RM50)</label>
             </div>
-
             <button onclick="confirmCheckIn()" id="confirm-btn">Confirm Check-in</button>
             <button onclick="switchScreen('screen-booking')" class="btn-secondary">Back</button>
         </div>
 
-        <!-- 頁面 4: 確認頁 -->
+        <!-- 畫面4: 確認頁 -->
         <div id="screen-confirmation" class="screen">
             <h2 id="conf-title">Check-in Successful!</h2>
             <p id="conf-msg">Thank you for choosing Sun Inns.</p>
@@ -243,80 +151,61 @@
             <button onclick="finishCheckIn()" id="done-btn">Done</button>
         </div>
 
-        <!-- 頁面 5: Admin -->
+        <!-- 畫面5: Admin 後台 -->
         <div id="screen-admin" class="screen">
             <h2>Admin Panel</h2>
-            <p>Rooms Checked In: <strong id="admin-count">0</strong></p>
+            <p>Currently Checked In: <strong id="admin-count">0</strong></p>
+            <div id="admin-list" style="width:100%; text-align:left; font-size:14px; margin-top:10px; max-height:300px; overflow-y:auto; border:1px solid #ddd; padding:10px; border-radius:5px;"></div>
             <button onclick="switchScreen('screen-welcome')" class="btn-secondary">Back to Start</button>
         </div>
-
     </div>
 
     <script>
         // ============================================
-        // 資料庫與全域變數
+        // 1. 資料庫 (預設訂單，加入了客人姓名)
         // ============================================
         let bookings = [
-            { id: 101, guests: 2, roomNo: 101, type: "Deluxe", nights: 2, rate: 150 },
-            { id: 102, guests: 1, roomNo: 102, type: "Single", nights: 1, rate: 100 },
-            { id: 103, guests: 4, roomNo: 103, type: "Family", nights: 3, rate: 250 },
-            { id: 104, guests: 2, roomNo: 104, type: "Standard", nights: 1, rate: 120 },
-            { id: 105, guests: 3, roomNo: 105, type: "Suite", nights: 2, rate: 200 }
+            { id: 101, name: "Mr. Tan", guests: 2, roomNo: 101, type: "Deluxe", nights: 2, rate: 150 },
+            { id: 102, name: "Ms. Lee", guests: 1, roomNo: 102, type: "Single", nights: 1, rate: 100 },
+            { id: 103, name: "Mr. Wong", guests: 4, roomNo: 103, type: "Family", nights: 3, rate: 250 },
+            { id: 104, name: "Ms. Lim", guests: 2, roomNo: 104, type: "Standard", nights: 1, rate: 120 },
+            { id: 105, name: "Mr. Kevin", guests: 3, roomNo: 105, type: "Suite", nights: 2, rate: 200 }
         ];
 
-        console.log("--- 5 Bookings Loaded from Database ---");
-        console.log(bookings);
-
-        // 讀取已入住資料 (包含時間戳)
-        // 資料結構範例: { id: 101, checkInTime: "2026-08-13T10:30:00" }
+        // ============================================
+        // 2. 讀取 localStorage (核心：重整後資料保留)
+        // ============================================
+        // 從電腦硬碟讀取之前存過的「入住紀錄」
         let checkedInRooms = JSON.parse(localStorage.getItem('sunInnsCheckedIn')) || [];
 
+        // 剛打開網頁時，先更新一下 Admin 面板 (如果有舊資料在裡面)
+        if(checkedInRooms.length > 0){
+            console.log("已有舊的入住紀錄載入：", checkedInRooms);
+        }
+
         // ============================================
-        // 翻譯字典
+        // 3. 介面控制與多語系
         // ============================================
         const translations = {
             'en': {
-                'welcome-text': 'Welcome to our mini check-in kiosk.',
-                'welcome-btn': 'Check-In',
-                'checkout-btn': 'Check-Out',
-                'booking-title': 'Find Your Booking',
-                'search-btn': 'Search',
-                'details-title': 'Room Details',
+                'welcome-text': 'Welcome to our mini check-in kiosk.', 'welcome-btn': 'Check-In', 'checkout-btn': 'Check-Out',
+                'booking-title': 'Find Your Booking', 'search-btn': 'Search', 'details-title': 'Room Details',
                 'th-guests': 'Guests', 'th-room': 'Room No.', 'th-type': 'Type', 'th-nights': 'Nights', 'th-rate': 'Rate',
-                'confirm-btn': 'Confirm Check-in',
-                'conf-title': 'Check-in Successful!',
-                'conf-msg': 'Thank you for choosing Sun Inns.',
-                'total-price-label': 'Total',
-                'done-btn': 'Done',
-                'error-msg': 'Invalid booking number.',
-                'late-label': 'Late Check-out (+RM50)',
-                'overdue-msg': 'Overtime fee (Over 12hrs)',
+                'confirm-btn': 'Confirm Check-in', 'conf-title': 'Check-in Successful!', 'conf-msg': 'Thank you for choosing Sun Inns.',
+                'total-price-label': 'Total', 'done-btn': 'Done', 'error-msg': 'Invalid booking number.', 'late-label': 'Late Check-out (+RM50)',
                 'not-found-checkin': 'Room not checked in or not found.'
             },
             'bm': {
-                'welcome-text': 'Selamat datang ke kiosk daftar masuk mini kami.',
-                'welcome-btn': 'Daftar Masuk',
-                'checkout-btn': 'Daftar Keluar',
-                'booking-title': 'Cari Tempahan Anda',
-                'search-btn': 'Cari',
-                'details-title': 'Butiran Bilik',
+                'welcome-text': 'Selamat datang ke kiosk daftar masuk mini kami.', 'welcome-btn': 'Daftar Masuk', 'checkout-btn': 'Daftar Keluar',
+                'booking-title': 'Cari Tempahan Anda', 'search-btn': 'Cari', 'details-title': 'Butiran Bilik',
                 'th-guests': 'Tetamu', 'th-room': 'No. Bilik', 'th-type': 'Jenis', 'th-nights': 'Malam', 'th-rate': 'Kadar',
-                'confirm-btn': 'Sahkan Daftar Masuk',
-                'conf-title': 'Daftar Masuk Berjaya!',
-                'conf-msg': 'Terima kasih memilih Sun Inns.',
-                'total-price-label': 'Jumlah',
-                'done-btn': 'Selesai',
-                'error-msg': 'Nombor tempahan tidak sah.',
-                'late-label': 'Daftar keluar lewat (+RM50)',
-                'overdue-msg': 'Caj lebih masa (Melebihi 12 jam)',
+                'confirm-btn': 'Sahkan Daftar Masuk', 'conf-title': 'Daftar Masuk Berjaya!', 'conf-msg': 'Terima kasih memilih Sun Inns.',
+                'total-price-label': 'Jumlah', 'done-btn': 'Selesai', 'error-msg': 'Nombor tempahan tidak sah.', 'late-label': 'Daftar keluar lewat (+RM50)',
                 'not-found-checkin': 'Bilik belum daftar masuk atau tidak dijumpai.'
             }
         };
         let currentLang = 'en';
 
-        // ============================================
-        // 核心邏輯
-        // ============================================
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
@@ -325,10 +214,7 @@
 
         function searchBooking() {
             const inputVal = document.getElementById('booking-input').value;
-            if (!inputVal) {
-                showError("Please enter a room number.");
-                return;
-            }
+            if (!inputVal) { showError("Please enter a room number."); return; }
             const booking = bookings.find(b => b.id == inputVal);
 
             if (booking) {
@@ -350,6 +236,7 @@
             const tbody = document.getElementById('details-body');
             tbody.innerHTML = `
                 <tr>
+                    <td>${booking.name}</td>
                     <td>${booking.guests}</td>
                     <td>${booking.roomNo}</td>
                     <td>${booking.type}</td>
@@ -358,43 +245,38 @@
                 </tr>
             `;
             window.currentBooking = booking;
-            
             document.getElementById('late-check').checked = false;
             document.getElementById('late-option-area').style.display = 'flex';
         }
 
-        // ---- 入住 (Check-In) 邏輯 ----
+        // ---- 入住 (Check-In) 核心邏輯 ----
         function confirmCheckIn() {
             if (window.currentBooking) {
-                // 記錄下當下的時間
                 const currentTime = new Date().toISOString();
                 
-                // 把入住紀錄放進儲存陣列 (記錄 ID 和 時間)
-                // 並且避免重複入住 (如果已經在裡面就不再加)
+                // 檢查該房號是否已經被辦理入住了
                 const exists = checkedInRooms.some(item => item.id === window.currentBooking.id);
                 if (!exists) {
+                    // 把詳細資料存進 checkedInRooms
                     checkedInRooms.push({
                         id: window.currentBooking.id,
-                        checkInTime: currentTime
+                        name: window.currentBooking.name,
+                        roomNo: window.currentBooking.roomNo,
+                        checkInTime: currentTime,
+                        status: "Checked-In" // 狀態
                     });
+                    
+                    // 【關鍵步驟】將最新名單存回你的電腦硬碟 (localStorage)
                     localStorage.setItem('sunInnsCheckedIn', JSON.stringify(checkedInRooms));
                 }
 
-                // 計算原本的房費
                 const b = window.currentBooking;
                 const roomTotal = b.nights * b.rate;
                 
-                // 如果有勾選當下就要 +50 的延遲選項
                 const isLate = document.getElementById('late-check').checked;
-                let lateFee = 0;
-                let feeText = "";
-                if (isLate) {
-                    lateFee = 50;
-                    feeText = `+ RM50 late fee`;
-                } else {
-                    lateFee = 0;
-                    feeText = `(No late fee)`;
-                }
+                let lateFee = 0, feeText = "";
+                if (isLate) { lateFee = 50; feeText = `+ RM50 late fee`; } 
+                else { lateFee = 0; feeText = `(No late fee)`; }
 
                 const grandTotal = roomTotal + lateFee;
 
@@ -410,55 +292,44 @@
             switchScreen('screen-welcome');
         }
 
-        // ---- 退房 (Check-Out) 邏輯 ----
+        // ---- 退房 (Check-Out) 核心邏輯 ----
         function checkOutProcess() {
-            // 用一個簡單的輸入框讓使用者輸入房號來退房 (這裡因為沒有真實掃描器，用輸入的)
             const roomId = prompt("Please enter the room number for Check-Out (請輸入要退房的房號):");
             if (!roomId) return;
 
-            // 1. 檢查是不是有這間房間
             const booking = bookings.find(b => b.id == roomId);
-            if (!booking) {
-                alert("Room number not found! (找不到此房號)");
-                return;
-            }
+            if (!booking) { alert("Room number not found! (找不到此房號)"); return; }
 
-            // 2. 檢查這間房間有沒有被「入住」過
-            const record = checkedInRooms.find(item => item.id == roomId);
-            if (!record) {
+            // 找出這間房間的入住紀錄
+            const recordIndex = checkedInRooms.findIndex(item => item.id == roomId);
+            if (recordIndex === -1) {
                 alert(translations[currentLang]['not-found-checkin']);
                 return;
             }
 
-            // 3. 計算時間
+            const record = checkedInRooms[recordIndex];
             const checkInTime = new Date(record.checkInTime);
             const currentTime = new Date();
-
-            // 計算經過的毫秒數，除以 (1000 * 60 * 60) 得到小時
             const hoursDiff = (currentTime - checkInTime) / (1000 * 60 * 60);
 
-            // 4. 計算超時費 (如果超過 12 小時)
-            let overTimeFee = 0;
-            let overtimeText = "";
-            if (hoursDiff > 12) {
-                overTimeFee = 50;
-                overtimeText = ` (Over 12 hours, +RM50)`;
-            } else {
-                overtimeText = ` (Within 12 hours, no extra fee)`;
-            }
+            let overTimeFee = 0, overtimeText = "";
+            if (hoursDiff > 12) { overTimeFee = 50; overtimeText = ` (Over 12 hours, +RM50)`; } 
+            else { overtimeText = ` (Within 12 hours, no extra fee)`; }
 
-            // 5. 計算總金額 (基本房費 + 超時費)
             const baseRoomCost = booking.nights * booking.rate;
             const finalCost = baseRoomCost + overTimeFee;
 
-            // 6. 從已入住名單中移除
-            const updatedList = checkedInRooms.filter(item => item.id != roomId);
-            checkedInRooms = updatedList;
+            // 1. 更新該筆紀錄的狀態和退房時間 (保留歷史紀錄的概念)
+            checkedInRooms[recordIndex].status = "Checked-Out";
+            checkedInRooms[recordIndex].checkOutTime = currentTime.toISOString();
+            
+            // 2. 【關鍵步驟】將更新後的資料存回電腦硬碟
             localStorage.setItem('sunInnsCheckedIn', JSON.stringify(checkedInRooms));
 
-            // 7. 顯示退房結帳明細 (用 alert 顯示，或者你可以導向一個新的畫面，這裡用最直覺的 alert)
+            // 顯示結帳明細
             alert(`=== Check-Out Receipt ===
 Room: ${booking.roomNo} (${booking.type})
+Guest: ${booking.name}
 Check-in Time: ${checkInTime.toLocaleString()}
 Check-out Time: ${currentTime.toLocaleString()}
 Total Duration: ${hoursDiff.toFixed(1)} Hours
@@ -468,13 +339,30 @@ Overtime Fee: RM${overTimeFee} ${overtimeText}
 ============================
 ** TOTAL PAID: RM${finalCost} **`);
 
-            // 回到歡迎頁
             switchScreen('screen-welcome');
         }
 
-        // ---- Admin 邏輯 ----
-        function showAdminCount() {
+        // ---- Admin 後台顯示清單 ----
+        function showAdminPanel() {
             document.getElementById('admin-count').textContent = checkedInRooms.length;
+            
+            const listDiv = document.getElementById('admin-list');
+            if (checkedInRooms.length === 0) {
+                listDiv.innerHTML = "<p style='color:#999;'>No active records.</p>";
+            } else {
+                let html = "<ul style='list-style:none; padding:0; margin:0;'>";
+                // 倒序顯示，最新的在最上面
+                for (let i = checkedInRooms.length - 1; i >= 0; i--) {
+                    const item = checkedInRooms[i];
+                    const time = new Date(item.checkInTime).toLocaleString();
+                    html += `<li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                        <strong>${item.name}</strong> (Room ${item.roomNo})<br>
+                        <span style='color:#666; font-size:12px;'>Check-in: ${time} | Status: ${item.status}</span>
+                    </li>`;
+                }
+                html += "</ul>";
+                listDiv.innerHTML = html;
+            }
             switchScreen('screen-admin');
         }
 
@@ -502,8 +390,6 @@ Overtime Fee: RM${overTimeFee} ${overtimeText}
             document.getElementById('error-msg').textContent = t['error-msg'];
             document.getElementById('late-label').textContent = t['late-label'];
         });
-
-        console.log("Currently checked in rooms:", checkedInRooms);
     </script>
 </body>
 </html>
