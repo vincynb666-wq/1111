@@ -261,7 +261,6 @@
             errorEl.style.display = 'block';
         }
 
-        // 【核心修改】顯示詳情時，也存下「目前查詢的房間 ID」
         function displayDetails(booking) {
             const tbody = document.getElementById('details-body');
             tbody.innerHTML = `
@@ -275,7 +274,7 @@
                 </tr>
             `;
             window.currentBooking = booking;
-            localStorage.setItem('sunInnsCurrentBookingId', booking.id); // 存下目前房號
+            localStorage.setItem('sunInnsCurrentBookingId', booking.id);
         }
 
         function confirmCheckIn() {
@@ -297,6 +296,11 @@
 
                 const b = window.currentBooking;
                 const grandTotal = b.nights * b.rate;
+                
+                // 【關鍵修改】把總價和明細存進 localStorage
+                localStorage.setItem('sunInnsConfirmationTotal', grandTotal.toFixed(2));
+                localStorage.setItem('sunInnsConfirmationDetail', `(RM${b.rate} x ${b.nights} nights)`);
+
                 document.getElementById('total-price').textContent = `RM${grandTotal.toFixed(2)}`;
                 document.getElementById('price-detail').textContent = `(RM${b.rate} x ${b.nights} nights)`;
                 switchScreen('screen-confirmation');
@@ -306,7 +310,9 @@
         function finishCheckIn() {
             document.getElementById('booking-input').value = '';
             window.currentBooking = null;
-            localStorage.removeItem('sunInnsCurrentBookingId'); // 完成入住後清除記憶
+            localStorage.removeItem('sunInnsCurrentBookingId');
+            localStorage.removeItem('sunInnsConfirmationTotal'); // 完成後清除
+            localStorage.removeItem('sunInnsConfirmationDetail');
             switchScreen('screen-welcome');
         }
 
@@ -425,13 +431,20 @@
             document.getElementById('receipt-done-btn').textContent = t['receipt-done-btn'];
         });
 
-        // 【核心修改】網頁載入時，恢復畫面並恢復「目前查詢的房間」
+        // 【關鍵修改】網頁載入時，如果是在確認頁，直接讀取保存的總價和明細
         window.addEventListener('load', function() {
             const savedScreen = localStorage.getItem('sunInnsCurrentScreen');
             const savedBookingId = localStorage.getItem('sunInnsCurrentBookingId');
+            const savedTotal = localStorage.getItem('sunInnsConfirmationTotal');
+            const savedDetail = localStorage.getItem('sunInnsConfirmationDetail');
 
-            // 如果之前有在「房間詳情頁」，且記得當時查詢的房間 ID
-            if (savedScreen === 'screen-details' && savedBookingId) {
+            if (savedScreen === 'screen-confirmation' && savedTotal) {
+                // 在確認頁就直接顯示保存的金額
+                document.getElementById('total-price').textContent = `RM${savedTotal}`;
+                document.getElementById('price-detail').textContent = savedDetail;
+                switchScreen('screen-confirmation');
+            } 
+            else if (savedScreen === 'screen-details' && savedBookingId) {
                 const booking = bookings.find(b => b.id == savedBookingId);
                 if (booking) {
                     displayDetails(booking);
@@ -440,11 +453,9 @@
                     switchScreen('screen-welcome');
                 }
             } 
-            // 如果記得頁面但不是在房間詳情
             else if (savedScreen && document.getElementById(savedScreen)) {
                 switchScreen(savedScreen);
             } 
-            // 預設首頁
             else {
                 switchScreen('screen-welcome');
             }
