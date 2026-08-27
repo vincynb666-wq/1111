@@ -87,7 +87,6 @@
         .price-breakdown { font-size: 14px; color: #555; margin-top: 5px; }
         #checkout-input { width: 80%; font-size: 20px; text-align: center; margin-top: 10px; }
 
-        /* 【新增】結帳收據樣式 */
         #receipt-box {
             width: 100%;
             background: #f9f9f9;
@@ -169,7 +168,6 @@
             <button onclick="switchScreen('screen-welcome')" class="btn-secondary">Back</button>
         </div>
 
-        <!-- 【新增】退房收據頁面 -->
         <div id="screen-receipt" class="screen">
             <h2 id="receipt-title">Check-Out Receipt</h2>
             <div id="receipt-box">
@@ -263,6 +261,7 @@
             errorEl.style.display = 'block';
         }
 
+        // 【核心修改】顯示詳情時，也存下「目前查詢的房間 ID」
         function displayDetails(booking) {
             const tbody = document.getElementById('details-body');
             tbody.innerHTML = `
@@ -276,6 +275,7 @@
                 </tr>
             `;
             window.currentBooking = booking;
+            localStorage.setItem('sunInnsCurrentBookingId', booking.id); // 存下目前房號
         }
 
         function confirmCheckIn() {
@@ -306,12 +306,10 @@
         function finishCheckIn() {
             document.getElementById('booking-input').value = '';
             window.currentBooking = null;
+            localStorage.removeItem('sunInnsCurrentBookingId'); // 完成入住後清除記憶
             switchScreen('screen-welcome');
         }
 
-        // ============================================
-        // 【核心修改】將退房結帳改為獨立頁面
-        // ============================================
         function processCheckOut() {
             const roomId = document.getElementById('checkout-input').value;
             const errorEl = document.getElementById('co-error-msg');
@@ -359,7 +357,6 @@
             
             localStorage.setItem('sunInnsCheckedIn', JSON.stringify(checkedInRooms));
 
-            // 【修改】填充收據頁面的內容
             document.getElementById('receipt-room').textContent = `Room: ${booking.roomNo} (${booking.type})`;
             document.getElementById('receipt-guest').textContent = `Guest: ${booking.name}`;
             document.getElementById('receipt-checkin').textContent = `Check-in Time: ${checkInTime.toLocaleString()}`;
@@ -369,11 +366,9 @@
             document.getElementById('receipt-fee').textContent = `Overtime Fee: RM${overTimeFee} ${overtimeText}`;
             document.getElementById('receipt-total').textContent = `TOTAL PAID: RM${finalCost}`;
 
-            // 跳轉到收據頁面
             switchScreen('screen-receipt');
         }
 
-        // 收據頁面的 Done 按鈕，按下後回首頁
         function finishCheckOut() {
             switchScreen('screen-welcome');
         }
@@ -430,11 +425,27 @@
             document.getElementById('receipt-done-btn').textContent = t['receipt-done-btn'];
         });
 
+        // 【核心修改】網頁載入時，恢復畫面並恢復「目前查詢的房間」
         window.addEventListener('load', function() {
             const savedScreen = localStorage.getItem('sunInnsCurrentScreen');
-            if (savedScreen && document.getElementById(savedScreen)) {
+            const savedBookingId = localStorage.getItem('sunInnsCurrentBookingId');
+
+            // 如果之前有在「房間詳情頁」，且記得當時查詢的房間 ID
+            if (savedScreen === 'screen-details' && savedBookingId) {
+                const booking = bookings.find(b => b.id == savedBookingId);
+                if (booking) {
+                    displayDetails(booking);
+                    switchScreen('screen-details');
+                } else {
+                    switchScreen('screen-welcome');
+                }
+            } 
+            // 如果記得頁面但不是在房間詳情
+            else if (savedScreen && document.getElementById(savedScreen)) {
                 switchScreen(savedScreen);
-            } else {
+            } 
+            // 預設首頁
+            else {
                 switchScreen('screen-welcome');
             }
         });
