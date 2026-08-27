@@ -85,8 +85,29 @@
 
         .error-msg { color: red; font-size: 14px; display: none; }
         .price-breakdown { font-size: 14px; color: #555; margin-top: 5px; }
-        
         #checkout-input { width: 80%; font-size: 20px; text-align: center; margin-top: 10px; }
+
+        /* 【新增】結帳收據樣式 */
+        #receipt-box {
+            width: 100%;
+            background: #f9f9f9;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        #receipt-box div { margin-bottom: 8px; }
+        #receipt-total {
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #dc3545;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -148,6 +169,22 @@
             <button onclick="switchScreen('screen-welcome')" class="btn-secondary">Back</button>
         </div>
 
+        <!-- 【新增】退房收據頁面 -->
+        <div id="screen-receipt" class="screen">
+            <h2 id="receipt-title">Check-Out Receipt</h2>
+            <div id="receipt-box">
+                <div id="receipt-room"></div>
+                <div id="receipt-guest"></div>
+                <div id="receipt-checkin"></div>
+                <div id="receipt-checkout"></div>
+                <div id="receipt-duration"></div>
+                <div id="receipt-cost"></div>
+                <div id="receipt-fee"></div>
+                <div id="receipt-total"></div>
+            </div>
+            <button onclick="finishCheckOut()" id="receipt-done-btn" class="btn-success">Done</button>
+        </div>
+
         <div id="screen-admin" class="screen">
             <h2>Admin Panel</h2>
             <p>Currently Checked In: <strong id="admin-count">0</strong></p>
@@ -177,7 +214,7 @@
                 'not-found-checkin': 'Room not checked in or not found.',
                 'room-occupied': 'This room is already checked in. Please check out first.',
                 'co-title': 'Check-Out', 'co-text': 'Please enter the room number to check out.',
-                'co-btn': 'Confirm Check-Out'
+                'co-btn': 'Confirm Check-Out', 'receipt-title': 'Check-Out Receipt', 'receipt-done-btn': 'Done'
             },
             'bm': {
                 'welcome-text': 'Selamat datang ke kiosk daftar masuk mini kami.', 'welcome-btn': 'Daftar Masuk', 'checkout-btn': 'Daftar Keluar',
@@ -188,38 +225,29 @@
                 'not-found-checkin': 'Bilik belum daftar masuk atau tidak dijumpai.',
                 'room-occupied': 'Bilik ini telah didaftar masuk. Sila daftar keluar dahulu.',
                 'co-title': 'Daftar Keluar', 'co-text': 'Sila masukkan nombor bilik untuk daftar keluar.',
-                'co-btn': 'Sahkan Daftar Keluar'
+                'co-btn': 'Sahkan Daftar Keluar', 'receipt-title': 'Resit Daftar Keluar', 'receipt-done-btn': 'Selesai'
             }
         };
         let currentLang = 'en';
 
-        // ============================================
-        // 【修改1】switchScreen 現在會存下目前頁面
-        // ============================================
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             document.getElementById('error-msg').style.display = 'none';
             document.getElementById('co-error-msg').style.display = 'none'; 
             if(screenId === 'screen-checkout') document.getElementById('checkout-input').value = ''; 
-            
-            // 把目前的頁面存到 localStorage
             localStorage.setItem('sunInnsCurrentScreen', screenId);
+        }
+
+        function isRoomOccupied(roomId) {
+            return checkedInRooms.some(item => item.id == roomId && item.status === "Checked-In");
         }
 
         function searchBooking() {
             const inputVal = document.getElementById('booking-input').value;
             if (!inputVal) { showError("Please enter a room number."); return; }
-            
-            const isOccupied = checkedInRooms.some(item => item.id == inputVal && item.status === "Checked-In");
-
-            if (isOccupied) {
-                alert(translations[currentLang]['room-occupied']);
-                return;
-            }
-
+            if (isRoomOccupied(inputVal)) { alert(translations[currentLang]['room-occupied']); return; }
             const booking = bookings.find(b => b.id == inputVal);
-
             if (booking) {
                 displayDetails(booking);
                 switchScreen('screen-details');
@@ -252,15 +280,12 @@
 
         function confirmCheckIn() {
             if (window.currentBooking) {
-                const currentTime = new Date().toISOString();
-                
-                const exists = checkedInRooms.some(item => item.id === window.currentBooking.id && item.status === "Checked-In");
-                if (exists) {
+                if (isRoomOccupied(window.currentBooking.id)) {
                     alert(translations[currentLang]['room-occupied']);
                     switchScreen('screen-booking');
                     return;
                 }
-
+                const currentTime = new Date().toISOString();
                 checkedInRooms.push({
                     id: window.currentBooking.id,
                     name: window.currentBooking.name,
@@ -268,13 +293,10 @@
                     checkInTime: currentTime,
                     status: "Checked-In" 
                 });
-                
                 localStorage.setItem('sunInnsCheckedIn', JSON.stringify(checkedInRooms));
 
                 const b = window.currentBooking;
-                const roomTotal = b.nights * b.rate;
-                const grandTotal = roomTotal;
-
+                const grandTotal = b.nights * b.rate;
                 document.getElementById('total-price').textContent = `RM${grandTotal.toFixed(2)}`;
                 document.getElementById('price-detail').textContent = `(RM${b.rate} x ${b.nights} nights)`;
                 switchScreen('screen-confirmation');
@@ -287,6 +309,9 @@
             switchScreen('screen-welcome');
         }
 
+        // ============================================
+        // 【核心修改】將退房結帳改為獨立頁面
+        // ============================================
         function processCheckOut() {
             const roomId = document.getElementById('checkout-input').value;
             const errorEl = document.getElementById('co-error-msg');
@@ -304,7 +329,7 @@
                 return; 
             }
 
-            const recordIndex = checkedInRooms.findIndex(item => item.id == roomId);
+            const recordIndex = checkedInRooms.findIndex(item => item.id == roomId && item.status === "Checked-In");
             if (recordIndex === -1) {
                 errorEl.textContent = translations[currentLang]['not-found-checkin'];
                 errorEl.style.display = 'block';
@@ -334,18 +359,22 @@
             
             localStorage.setItem('sunInnsCheckedIn', JSON.stringify(checkedInRooms));
 
-            alert(`=== Check-Out Receipt ===
-Room: ${booking.roomNo} (${booking.type})
-Guest: ${booking.name}
-Check-in Time: ${checkInTime.toLocaleString()}
-Check-out Time: ${currentTime.toLocaleString()}
-Total Duration: ${(secondsDiff / 60).toFixed(1)} Minutes
+            // 【修改】填充收據頁面的內容
+            document.getElementById('receipt-room').textContent = `Room: ${booking.roomNo} (${booking.type})`;
+            document.getElementById('receipt-guest').textContent = `Guest: ${booking.name}`;
+            document.getElementById('receipt-checkin').textContent = `Check-in Time: ${checkInTime.toLocaleString()}`;
+            document.getElementById('receipt-checkout').textContent = `Check-out Time: ${currentTime.toLocaleString()}`;
+            document.getElementById('receipt-duration').textContent = `Total Duration: ${(secondsDiff / 60).toFixed(1)} Minutes`;
+            document.getElementById('receipt-cost').textContent = `Room Cost: RM${baseRoomCost}`;
+            document.getElementById('receipt-fee').textContent = `Overtime Fee: RM${overTimeFee} ${overtimeText}`;
+            document.getElementById('receipt-total').textContent = `TOTAL PAID: RM${finalCost}`;
 
-Room Cost: RM${baseRoomCost}
-Overtime Fee: RM${overTimeFee} ${overtimeText}
-============================
-** TOTAL PAID: RM${finalCost} **`);
+            // 跳轉到收據頁面
+            switchScreen('screen-receipt');
+        }
 
+        // 收據頁面的 Done 按鈕，按下後回首頁
+        function finishCheckOut() {
             switchScreen('screen-welcome');
         }
 
@@ -361,9 +390,7 @@ Overtime Fee: RM${overTimeFee} ${overtimeText}
                 for (let i = checkedInRooms.length - 1; i >= 0; i--) {
                     const item = checkedInRooms[i];
                     const time = new Date(item.checkInTime).toLocaleString();
-                    
                     const statusColor = item.status === "Checked-In" ? "green" : "gray";
-                    
                     html += `<li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
                         <strong>${item.name}</strong> (Room ${item.roomNo})<br>
                         <span style='color:#666; font-size:12px;'>Check-in: ${time} | <span style="color:${statusColor}">Status: ${item.status}</span></span>
@@ -396,15 +423,13 @@ Overtime Fee: RM${overTimeFee} ${overtimeText}
             document.getElementById('total-price-label').textContent = t['total-price-label'];
             document.getElementById('done-btn').textContent = t['done-btn'];
             document.getElementById('error-msg').textContent = t['error-msg'];
-            
             document.getElementById('co-title').textContent = t['co-title'];
             document.getElementById('co-text').textContent = t['co-text'];
             document.getElementById('co-btn').textContent = t['co-btn'];
+            document.getElementById('receipt-title').textContent = t['receipt-title'];
+            document.getElementById('receipt-done-btn').textContent = t['receipt-done-btn'];
         });
 
-        // ============================================
-        // 【修改2】網頁載入時，自動恢復上次的頁面
-        // ============================================
         window.addEventListener('load', function() {
             const savedScreen = localStorage.getItem('sunInnsCurrentScreen');
             if (savedScreen && document.getElementById(savedScreen)) {
