@@ -297,7 +297,6 @@
                 const b = window.currentBooking;
                 const grandTotal = b.nights * b.rate;
                 
-                // 【關鍵修改】把總價和明細存進 localStorage
                 localStorage.setItem('sunInnsConfirmationTotal', grandTotal.toFixed(2));
                 localStorage.setItem('sunInnsConfirmationDetail', `(RM${b.rate} x ${b.nights} nights)`);
 
@@ -311,7 +310,7 @@
             document.getElementById('booking-input').value = '';
             window.currentBooking = null;
             localStorage.removeItem('sunInnsCurrentBookingId');
-            localStorage.removeItem('sunInnsConfirmationTotal'); // 完成後清除
+            localStorage.removeItem('sunInnsConfirmationTotal');
             localStorage.removeItem('sunInnsConfirmationDetail');
             switchScreen('screen-welcome');
         }
@@ -363,19 +362,33 @@
             
             localStorage.setItem('sunInnsCheckedIn', JSON.stringify(checkedInRooms));
 
-            document.getElementById('receipt-room').textContent = `Room: ${booking.roomNo} (${booking.type})`;
-            document.getElementById('receipt-guest').textContent = `Guest: ${booking.name}`;
-            document.getElementById('receipt-checkin').textContent = `Check-in Time: ${checkInTime.toLocaleString()}`;
-            document.getElementById('receipt-checkout').textContent = `Check-out Time: ${currentTime.toLocaleString()}`;
-            document.getElementById('receipt-duration').textContent = `Total Duration: ${(secondsDiff / 60).toFixed(1)} Minutes`;
-            document.getElementById('receipt-cost').textContent = `Room Cost: RM${baseRoomCost}`;
-            document.getElementById('receipt-fee').textContent = `Overtime Fee: RM${overTimeFee} ${overtimeText}`;
-            document.getElementById('receipt-total').textContent = `TOTAL PAID: RM${finalCost}`;
+            // 【修改】將收據內容保存到 localStorage
+            const receiptData = {
+                room: `Room: ${booking.roomNo} (${booking.type})`,
+                guest: `Guest: ${booking.name}`,
+                checkin: `Check-in Time: ${checkInTime.toLocaleString()}`,
+                checkout: `Check-out Time: ${currentTime.toLocaleString()}`,
+                duration: `Total Duration: ${(secondsDiff / 60).toFixed(1)} Minutes`,
+                cost: `Room Cost: RM${baseRoomCost}`,
+                fee: `Overtime Fee: RM${overTimeFee} ${overtimeText}`,
+                total: `TOTAL PAID: RM${finalCost}`
+            };
+            localStorage.setItem('sunInnsLastReceipt', JSON.stringify(receiptData));
+
+            document.getElementById('receipt-room').textContent = receiptData.room;
+            document.getElementById('receipt-guest').textContent = receiptData.guest;
+            document.getElementById('receipt-checkin').textContent = receiptData.checkin;
+            document.getElementById('receipt-checkout').textContent = receiptData.checkout;
+            document.getElementById('receipt-duration').textContent = receiptData.duration;
+            document.getElementById('receipt-cost').textContent = receiptData.cost;
+            document.getElementById('receipt-fee').textContent = receiptData.fee;
+            document.getElementById('receipt-total').textContent = receiptData.total;
 
             switchScreen('screen-receipt');
         }
 
         function finishCheckOut() {
+            localStorage.removeItem('sunInnsLastReceipt');
             switchScreen('screen-welcome');
         }
 
@@ -431,15 +444,15 @@
             document.getElementById('receipt-done-btn').textContent = t['receipt-done-btn'];
         });
 
-        // 【關鍵修改】網頁載入時，如果是在確認頁，直接讀取保存的總價和明細
+        // 【修改】網頁載入時，根據 savedScreen 恢復所有狀態
         window.addEventListener('load', function() {
             const savedScreen = localStorage.getItem('sunInnsCurrentScreen');
             const savedBookingId = localStorage.getItem('sunInnsCurrentBookingId');
             const savedTotal = localStorage.getItem('sunInnsConfirmationTotal');
             const savedDetail = localStorage.getItem('sunInnsConfirmationDetail');
+            const savedReceipt = JSON.parse(localStorage.getItem('sunInnsLastReceipt'));
 
             if (savedScreen === 'screen-confirmation' && savedTotal) {
-                // 在確認頁就直接顯示保存的金額
                 document.getElementById('total-price').textContent = `RM${savedTotal}`;
                 document.getElementById('price-detail').textContent = savedDetail;
                 switchScreen('screen-confirmation');
@@ -452,7 +465,23 @@
                 } else {
                     switchScreen('screen-welcome');
                 }
-            } 
+            }
+            else if (savedScreen === 'screen-receipt' && savedReceipt) {
+                // 【修改】如果是在收據頁刷新，重新填滿收據內容
+                document.getElementById('receipt-room').textContent = savedReceipt.room;
+                document.getElementById('receipt-guest').textContent = savedReceipt.guest;
+                document.getElementById('receipt-checkin').textContent = savedReceipt.checkin;
+                document.getElementById('receipt-checkout').textContent = savedReceipt.checkout;
+                document.getElementById('receipt-duration').textContent = savedReceipt.duration;
+                document.getElementById('receipt-cost').textContent = savedReceipt.cost;
+                document.getElementById('receipt-fee').textContent = savedReceipt.fee;
+                document.getElementById('receipt-total').textContent = savedReceipt.total;
+                switchScreen('screen-receipt');
+            }
+            else if (savedScreen === 'screen-admin') {
+                // 【修改】如果是在 Admin 頁面刷新，重新執行 showAdminPanel 讓列表出現
+                showAdminPanel();
+            }
             else if (savedScreen && document.getElementById(savedScreen)) {
                 switchScreen(savedScreen);
             } 
