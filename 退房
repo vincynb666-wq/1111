@@ -120,8 +120,8 @@
 
         <div id="screen-welcome" class="screen active">
             <p id="welcome-text" style="font-size: 18px; margin-top: 10px;">Welcome to our mini check-in kiosk.</p>
-            <button onclick="switchScreen('screen-booking')" id="welcome-btn" class="btn-success">Check-In (入住)</button>
-            <button onclick="switchScreen('screen-checkout')" id="checkout-btn" class="btn-danger">Check-Out (退房)</button>
+            <button onclick="switchScreen('screen-booking')" id="welcome-btn" class="btn-success">Check-In </button>
+            <button onclick="switchScreen('screen-checkout')" id="checkout-btn" class="btn-danger">Check-Out</button>
         </div>
 
         <div id="screen-booking" class="screen">
@@ -160,7 +160,7 @@
         </div>
 
         <div id="screen-checkout" class="screen">
-            <h2 id="co-title">Check-Out (退房)</h2>
+            <h2 id="co-title">Check-Out </h2>
             <p id="co-text">Please enter the room number to check out.</p>
             <input type="text" id="checkout-input" placeholder="Enter Room Number">
             <p id="co-error-msg" class="error-msg">Room not checked in or not found.</p>
